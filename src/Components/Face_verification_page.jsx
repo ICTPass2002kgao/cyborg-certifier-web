@@ -3,8 +3,14 @@ import { FaceMesh } from "@mediapipe/face_mesh";
 import * as cam from "@mediapipe/camera_utils";
 import * as Facemesh from "@mediapipe/face_mesh";
 import Webcam from "react-webcam";
+import { useLocation } from "react-router-dom";
+import id_card from '../assets/front_id.jpg';
+import id_book from '../assets/id_book.jpg';
+
 
 function FaceVerificationPage() {
+  const location = useLocation();
+  const { email, selectedAddress, selectedStamp, selectedID } = location.state || {};
   const webcamRef = useRef(null);
   const canvasRef = useRef(null);
 
@@ -88,12 +94,60 @@ function FaceVerificationPage() {
       });
       camera.start();
     }
-  }, []);
+  }, []); 
 
   return (
     <div className="main">
         <div className="document-uploads">
-    <input type="file" name="id" id="id_codument" />
+        <div className="container">
+          
+      <div class="mb-3"  data-bs-toggle="modal" data-bs-target="#staticBackdrop">
+  <label for="formFile" class="form-label">Please crop your document like this.</label>
+  <input class="form-control" type="file" id="formFile" disabled/>
+</div>  
+      {selectedID == 'ID_CARD' ?  
+      <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h1 class="modal-title fs-5" id="staticBackdropLabel">Please crop your document like this.</h1>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+            <img src={id_card} width="100%" alt="" />
+            </div>
+            <div class="modal-footer"> 
+              
+              <input class="form-control" type="file" id="formFile"  /> 
+            </div>
+          </div>
+        </div>
+        </div>:
+         <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+         <div class="modal-dialog">
+           <div class="modal-content">
+             <div class="modal-header">
+               <h1 class="modal-title fs-5" id="staticBackdropLabel">Please crop your document like this.</h1>
+               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+             </div>
+             <div class="modal-body">
+              
+            <img src={id_book} width="100%" alt="" />
+             </div>
+             <div class="modal-footer">
+             <input class="form-control" data-bs-dismiss="modal" type="file" id="formFile"  />  
+             </div>
+           </div>
+         </div>
+         </div>
+        
+        }
+      {selectedStamp && (
+        <div> 
+          <img src={`https://cyborgcertifier-production.up.railway.app${selectedStamp}`} alt="Stamp" width="200px" />
+        </div>
+      )}
+    </div>
         </div>
     <div className="camera-section">
          
