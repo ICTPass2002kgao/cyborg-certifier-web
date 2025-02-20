@@ -134,6 +134,7 @@ function FaceVerificationPage() {
           <Webcam ref={webcamRef} screenshotFormat="image/jpeg" className="webcam" />
           {countdown > 0 && <h3 className="text-center mt-3">Capturing in {countdown} seconds...</h3>}
           <canvas ref={canvasRef} className="canvas-overlay" />
+          <br/>
           <button className="btn btn-outline-success" onClick={captureFaceAndSubmit} id="btn-verify">Verify</button>
         </div>
       )}
