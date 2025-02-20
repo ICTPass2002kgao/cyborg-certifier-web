@@ -1,189 +1,148 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { FaceMesh } from "@mediapipe/face_mesh";
 import * as cam from "@mediapipe/camera_utils";
-import * as Facemesh from "@mediapipe/face_mesh";
 import Webcam from "react-webcam";
 import { useLocation } from "react-router-dom";
 import id_card from '../assets/front_id.jpg';
 import id_book from '../assets/id_book.jpg';
-
+import axios from "axios";
+import { Modal } from 'react-bootstrap';
 
 function FaceVerificationPage() {
   const location = useLocation();
-  const { email, selectedAddress, selectedStamp, selectedID } = location.state || {};
+  const { email, selectedStamp, selectedID } = location.state || {};
   const webcamRef = useRef(null);
   const canvasRef = useRef(null);
+  const [uploadedImages, setUploadedImages] = useState({ front: null, back: null });
+  const [loading, setLoading] = useState(false);
+  const [apiResponse, setApiResponse] = useState(null);
+  const [countdown, setCountdown] = useState(5);
+  const [cameraStarted, setCameraStarted] = useState(false);
+  const [showInstruction, setShowInstruction] = useState(true);
+  const [pdfUrl, setPdfUrl] = useState(null);
+  let camera = useRef(null);
 
-  const connect = window.drawConnectors;
-  var camera = null;
- 
   function onResults(results) {
+    if (!webcamRef.current || !canvasRef.current) return;
     const videoWidth = webcamRef.current.video.videoWidth;
     const videoHeight = webcamRef.current.video.videoHeight;
- 
     canvasRef.current.width = videoWidth;
     canvasRef.current.height = videoHeight;
-
-    const canvasElement = canvasRef.current;
-    const canvasCtx = canvasElement.getContext("2d");
-    
-    canvasCtx.save();
-    canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-    canvasCtx.drawImage(
-      results.image,
-      0,
-      0,
-      canvasElement.width,
-      canvasElement.height
-    );
-
-    if (results.multiFaceLandmarks) {
-      for (const landmarks of results.multiFaceLandmarks) {
-        connect(canvasCtx, landmarks, Facemesh.FACEMESH_TESSELATION, {
-          color: "#C0C0C070",
-          lineWidth: 0.5,
-        });
-        connect(canvasCtx, landmarks, Facemesh.FACEMESH_RIGHT_EYE, {
-            lineWidth:0, 
-        });
-        connect(canvasCtx, landmarks, Facemesh.FACEMESH_RIGHT_EYEBROW, {
-            lineWidth:0, 
-
-        });
-        connect(canvasCtx, landmarks, Facemesh.FACEMESH_LEFT_EYE, {
-        lineWidth:0, 
-          color: "#FF3030", 
-        });
-        connect(canvasCtx, landmarks, Facemesh.FACEMESH_LEFT_EYEBROW, {
-        lineWidth:0.5, 
-          color: "#30FF30",
-        });
-        connect(canvasCtx, landmarks, Facemesh.FACEMESH_FACE_OVAL, {
-        lineWidth:0.5, 
-          color: "#E0E0E0",
-        });
-        connect(canvasCtx, landmarks, Facemesh.FACEMESH_LIPS, {
-        lineWidth:0,  
-        });
-      }
-    }
-
-    canvasCtx.restore();
+    const canvasCtx = canvasRef.current.getContext("2d");
+    canvasCtx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+    canvasCtx.drawImage(results.image, 0, 0, canvasRef.current.width, canvasRef.current.height);
   }
 
   useEffect(() => {
-    const faceMesh = new FaceMesh({
-      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`,
-    });
-
-    faceMesh.setOptions({
-      maxNumFaces: 1,
-      minDetectionConfidence: 0.5,
-      minTrackingConfidence: 0.5,
-    });
-
-    faceMesh.onResults(onResults);
- 
-    if (webcamRef.current && webcamRef.current.video) {
-      camera = new cam.Camera(webcamRef.current.video, {
-        onFrame: async () => {
-          await faceMesh.send({ image: webcamRef.current.video });
-        },
-        width: 640,
-        height: 480,
+    const initializeCamera = async () => {
+      setLoading(true);
+      const faceMesh = new FaceMesh({
+        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`,
       });
-      camera.start();
+      faceMesh.setOptions({ maxNumFaces: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+      faceMesh.onResults(onResults);
+      if (webcamRef.current && webcamRef.current.video) {
+        camera.current = new cam.Camera(webcamRef.current.video, {
+          onFrame: async () => {
+            await faceMesh.send({ image: webcamRef.current.video });
+          },
+          width: 320,
+          height: 180,
+        });
+        camera.current.start();
+        setCameraStarted(true);
+      }
+      setLoading(false);
+    };
+    initializeCamera();
+    const countdownInterval = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev === 1) {
+          clearInterval(countdownInterval);
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(countdownInterval);
+  }, []);
+
+  const handleFileChange = (event, type) => {
+    setShowInstruction(false);
+    const file = event.target.files[0];
+    if (file) {
+      setUploadedImages((prev) => ({ ...prev, [type]: file }));
     }
-  }, []); 
+  };
+
+  const captureFaceAndSubmit = async () => {
+    if (!webcamRef.current) return;
+    setLoading(true);
+    const imageSrc = webcamRef.current.getScreenshot();
+    const blob = await fetch(imageSrc).then((res) => res.blob());
+    const formData = new FormData();
+    formData.append("email", email);
+    formData.append("stamp", `https://cyborgcertifier-production.up.railway.app${selectedStamp}`);
+    formData.append("recognised_face", blob, "captured_face.jpg");
+    if (uploadedImages.front) formData.append("id_front_face", uploadedImages.front);
+    if (selectedID === 'ID_CARD' && uploadedImages.back) {
+      formData.append("id_back_face", uploadedImages.back);
+    }
+    try {
+      const response = await axios.post(
+        "https://cyborgcertifier-production.up.railway.app/verify-faces/",
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+      setApiResponse(response.data);
+      if (response.data.match === "Matched") {
+        setPdfUrl(response.data.pdf_url);
+      }
+    } catch (error) {
+      setApiResponse(error.response?.data?.error || "An error occurred while verifying images.");
+      console.error("Error verifying images", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="main">
-        <div className="document-uploads">
-        <div className="container">
-          
-      <div class="mb-3"  data-bs-toggle="modal" data-bs-target="#staticBackdrop">
-  <label for="formFile" class="form-label">Please crop your document like this.</label>
-  <input class="form-control" type="file" id="formFile" disabled/>
-</div>  
-      {selectedID == 'ID_CARD' ?  
-      <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h1 class="modal-title fs-5" id="staticBackdropLabel">Please crop your document like this.</h1>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-            <img src={id_card} width="100%" alt="" />
-            </div>
-            <div class="modal-footer"> 
-              
-              <input class="form-control" type="file" id="formFile"  /> 
-            </div>
-          </div>
-        </div>
-        </div>:
-         <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-         <div class="modal-dialog">
-           <div class="modal-content">
-             <div class="modal-header">
-               <h1 class="modal-title fs-5" id="staticBackdropLabel">Please crop your document like this.</h1>
-               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-             </div>
-             <div class="modal-body">
-              
-            <img src={id_book} width="100%" alt="" />
-             </div>
-             <div class="modal-footer">
-             <input class="form-control" data-bs-dismiss="modal" type="file" id="formFile"  />  
-             </div>
-           </div>
-         </div>
-         </div>
-        
-        }
-      {selectedStamp && (
-        <div> 
-          <img src={`https://cyborgcertifier-production.up.railway.app${selectedStamp}`} alt="Stamp" width="200px" />
+    <div className="verification-container">
+      {apiResponse && <div className="alert alert-success">{apiResponse}</div>}
+
+      <Modal show={showInstruction} onHide={() => setShowInstruction(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Instructions</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <img src={selectedID === 'ID_CARD' ? id_card : id_book} alt="Instruction" className="img-fluid" />
+          <p>Please crop your id like this before uploading.</p>
+        </Modal.Body>
+        <Modal.Footer>
+          <button className="btn btn-primary" onClick={() => setShowInstruction(false)}>Got it</button>
+        </Modal.Footer>
+      </Modal>
+
+      <div className="upload-section">
+      {loading && <div className="alert alert-info">Processing, please wait...</div>}
+        <label className="form-label">Upload your ID</label>
+        <input type="file" className="form-control" onChange={(e) => handleFileChange(e, "front")} />
+        {selectedID === 'ID_CARD' && <input type="file" className="form-control" onChange={(e) => handleFileChange(e, "back")} />}
+      </div>
+
+      {uploadedImages.front && !loading && (
+        <div className="camera-section">
+          <Webcam ref={webcamRef} screenshotFormat="image/jpeg" className="webcam" />
+          {countdown > 0 && <h3 className="text-center mt-3">Capturing in {countdown} seconds...</h3>}
+          <canvas ref={canvasRef} className="canvas-overlay" />
+          <button className="btn btn-outline-success" onClick={captureFaceAndSubmit} id="btn-verify">Verify</button>
         </div>
       )}
-    </div>
-        </div>
-    <div className="camera-section">
-         
-      <div className="FaceVerificationPage">
-        <Webcam
-          ref={webcamRef}
-          style={{
-            position: "absolute",
-            marginLeft: "auto",
-            marginRight: "auto",
-            left: 0,
-            right: 0,
-            textAlign: "center",
-            zIndex: 9,
-            width: 350,
-            height: 300,
-          }}
-        />
-        <canvas
-          ref={canvasRef}
-          className="output_canvas"
-          style={{
-            position: "absolute",
-            marginLeft: "auto",
-            marginRight: "auto",
-            left: 0,
-            right: 0,
-            textAlign: "center",
-            zIndex: 9,
-            width: 350,
-            height: 300,
-          }}
-        />
-      </div> 
-    </div>
 
+      {pdfUrl && (
+        <div className="alert alert-success">
+          Face Matched! <a href={pdfUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary">View Certified Document</a>
+        </div>
+      )}
     </div>
   );
 }
