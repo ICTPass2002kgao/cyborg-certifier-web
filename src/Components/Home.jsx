@@ -14,7 +14,7 @@ const Home = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch("https://cyborgcertifier-production.up.railway.app/get_stamp/")
+    fetch("http://127.0.0.1:8000/get_stamp/")
       .then((res) => {
         if (!res.ok) {
           throw new Error("Network response was not ok");
@@ -58,8 +58,8 @@ const Home = () => {
 
   if (isLoading) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "100vh" }}>
-        <div className="spinner-grow" role="status">
+      <div className="d-flex justify-content-center align-items-center"  >
+        <div className="spinner-grow" style={{color:'white'}} role="status">
           <span className="visually-hidden">Loading...</span>
         </div>
       </div>
@@ -114,9 +114,13 @@ const Home = () => {
                 <option value="" disabled>Select your nearby location</option>
                 {addresses.map((address, index) => (
                   <option key={index} value={address.address}>
-                    {address.address}
-                  </option>
+                  {address.address}
+                </option>
+                
                 ))}
+                  <option value="Other">
+                  Other
+                </option>
               </select>
               <label htmlFor="floatingSelectGrid">Available Facilities</label>
             </div>
@@ -130,15 +134,16 @@ const Home = () => {
               value={selectedID}
               onChange={(e) => setSelectedID(e.target.value)}
             >
-              <option value="" disabled>Select ID Type</option>
+              <option value="" disabled>Select Document Type</option>
               <option value="ID_CARD">ID Card</option>
               <option value="ID_BOOK">ID Book</option>
+              <option value="Other">Other</option>
             </select>
-            <label htmlFor="floatingSelectID">Select ID</label>
+            <label htmlFor="floatingSelectID">Select Document Type</label>
           </div>
 
           <br /> 
-          <div className="d-grid gap-2 col-7 mx-auto">
+          <div className="d-grid gap-2 col-8 mx-auto">
             <button className="btn btn-outline-primary" onClick={handleSubmit}>
               Continue
             </button>

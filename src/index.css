@@ -1,18 +1,18 @@
 body{
   font-family: "Poppins", serif;
-  background-color: #151a25;
-  color: white;
+  background-color: #151a25; 
   margin:100px auto ;
+}
+h1,h2,h3,h4,h5,h6,label,span{
+  color:white;
 }
 .main {
   margin-top: 100px; 
 }
 
-.animation-container {
-
+.animation-container { 
   max-width: 100%; 
-}
-
+} 
 .address-container {
   max-width: 100%; 
 }
@@ -21,10 +21,7 @@ select{color: transparent;
 .document-uploads{
   max-width: 100%; 
 }
-.camera-section{
-  
-  max-width: 100%; 
-}
+
 .verification-main{
   display: flex;
   justify-content: space-around;
@@ -36,6 +33,22 @@ select{color: transparent;
   justify-content: space-between;
   border-radius: 10px;
   border:1px solid hsl(0, 0%, 70%); 
+  
+  max-width: 30%; 
+}
+@media (max-width:700px){
+  
+.camera-section{
+  display:flex;
+  padding: 20px;
+  flex-direction: column;
+  justify-content: space-between;
+  border-radius: 10px;
+  border:1px solid hsl(0, 0%, 70%); 
+  
+  max-width: 90%; 
+}
+
 }
 .camera-recognition{
   padding-bottom: 10px;
@@ -57,7 +70,7 @@ select{color: transparent;
   display: flex;
   justify-content: center;
   align-items: center;
-  background: rgba(0, 0, 0, 0.5);
+  background: white;
   z-index: 999;
 }
 
@@ -70,6 +83,7 @@ select{color: transparent;
 .webcam {
   width: 100%;
   height: 100%;
+  position: relative;
   border-radius: 10px;
 }
 
@@ -81,16 +95,7 @@ select{color: transparent;
   height: 100%;
 }
 
-.countdown-text {
-  font-size: 18px;
-  font-weight: bold;
-  text-align: center;
-  margin-top: 10px;
-}
 .btn-verify{
   margin-top:20px;
 }
- 
-.alert{
-  width:100%;
-}
+  
