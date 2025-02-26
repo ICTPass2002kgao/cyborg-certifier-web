@@ -179,11 +179,11 @@ function FaceVerificationPage() {
       </Modal>}
 
       <div className="upload-section">
-        {loading &&  <div className="d-flex justify-content-center align-items-center"  >
-        <div className="spinner-grow" role="status" style={{color:'white'}}>
-          <span className="visually-hidden">Loading...</span>
-        </div>
-      </div>}
+        {loading &&  <div className="text-center">
+  <div className="spinner-border" role="status">
+    <span className="visually-hidden">Loading...</span>
+  </div>
+</div>}
         <label className="form-label">Upload your ID (Front) *</label>
         <input
           type="file"
@@ -226,12 +226,24 @@ function FaceVerificationPage() {
         <div className="camera-section">
           <Webcam ref={webcamRef}  style={{width:'100%'}} screenshotFormat="image/jpeg" className="webcam" />
           <canvas ref={canvasRef} style={{width:'100%'}}  className="canvas-overlay" /> 
-          <br />
-          <button className="btn btn-outline-success" onClick={captureFaceAndSubmit} id="btn-verify">Verify</button>
-        </div>
-      )}
+          
+         
+        </div> 
+      )} 
+      {uploadedImages.front && (selectedID !== "ID_CARD" || uploadedImages.back) && !loading && cameraVisible && (
+         <button 
+        style={{width:"100%"}}
+  className="btn btn-outline-success btn-verify" 
+  onClick={captureFaceAndSubmit} 
+  id="btn-verify" 
+  disabled={loading}
+>
+  Verify
+</button> 
+      )} 
     </div>
   );
 }
 
 export default FaceVerificationPage;
+ 
