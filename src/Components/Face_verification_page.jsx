@@ -50,8 +50,7 @@ function FaceVerificationPage() {
     }
   }
 
-  useEffect(() => {
-    console.log(`http://127.0.0.1:8000${selectedStamp}`);
+  useEffect(() => {  
     if (!webcamRef.current || !webcamRef.current.video) return;
 
     const initializeCamera = async () => {
@@ -105,7 +104,7 @@ function FaceVerificationPage() {
       
       const formData = new FormData();
       formData.append("email", email); 
-      const _res = await fetch(`http://127.0.0.1:8000${selectedStamp}`);  
+      const _res = await fetch(`https://cyborgcertifier-production.up.railway.app${selectedStamp}`);  
       const _blob = await _res.blob(); 
       const file = new File([_blob], "stamp.jpg", { type: _blob.type });  
       formData.append("stamp", file);  
@@ -117,7 +116,7 @@ function FaceVerificationPage() {
       }
 
       const response = await axios.post(
-        "http://127.0.0.1:8000/verify-faces/",
+        "https://cyborgcertifier-production.up.railway.app/verify-faces/",
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );

@@ -14,7 +14,7 @@ const Home = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/get_stamp/")
+    fetch("https://cyborgcertifier-production.up.railway.app/get_stamp/")
       .then((res) => {
         if (!res.ok) {
           throw new Error("Network response was not ok");
