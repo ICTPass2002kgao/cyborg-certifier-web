@@ -154,7 +154,7 @@ function FaceVerificationPage() {
         </Modal.Footer>
       </Modal>
 
-      {selectedID ==="ID_CARD" && selectedID ==="ID_CARD" ?
+      {selectedID ==="ID_CARD" && selectedID ==="ID_BOOK" ?
       <Modal show={showInstruction} onHide={() => setShowInstruction(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Instructions</Modal.Title>
